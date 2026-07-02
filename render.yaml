@@ -10,7 +10,9 @@ services:
     startCommand: gunicorn -w 2 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:$PORT
     healthCheckPath: /health
     envVars:
-      - key: DATABASE_URL            # Neon POOLED url (postgresql+psycopg://...-pooler...?sslmode=require)
+      - key: PYTHON_VERSION          # pin: Render defaults to the newest (3.14) which is untested
+        value: 3.12.10
+      - key: DATABASE_URL            # Neon POOLED url — plain postgresql:// works, driver is auto-normalized
         sync: false
       - key: DIRECT_DATABASE_URL     # Neon direct url (for alembic in buildCommand)
         sync: false

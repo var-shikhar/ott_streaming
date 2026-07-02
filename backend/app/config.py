@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -32,6 +33,17 @@ class Settings(BaseSettings):
     razorpay_webhook_secret: str = "whsec_dummy"
 
     model_config = {"env_file": ".env", "extra": "ignore"}
+
+    @field_validator("database_url", "direct_database_url")
+    @classmethod
+    def _force_psycopg_driver(cls, v: str) -> str:
+        # Neon/Render hand out plain postgres(ql):// URLs; we ship psycopg v3,
+        # so rewrite the scheme or SQLAlchemy tries to import psycopg2.
+        if v.startswith("postgres://"):
+            v = "postgresql://" + v.removeprefix("postgres://")
+        if v.startswith("postgresql://"):
+            v = "postgresql+psycopg://" + v.removeprefix("postgresql://")
+        return v
 
 
 settings = Settings()
