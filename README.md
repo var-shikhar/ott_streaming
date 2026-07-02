@@ -1,12 +1,21 @@
 # ShortReel — Short-Drama Streaming Platform
 
-A subscription-based, **mobile-first** OTT web app for vertical micro-dramas (DramaBox / Tadka style): series of 1–3 minute portrait episodes where the first few episodes are free and the rest unlock with a Razorpay subscription.
+A subscription-based, **mobile-first** OTT web app for vertical micro-dramas (DramaBox / Tadka style): series of 1–3 minute portrait episodes watched in a **TikTok-style vertical swipe feed** — with likes, comments, and sharing — where the first few episodes are free and the rest unlock with a Razorpay subscription.
 
-- **Frontend**: Next.js 16 (App Router), Tailwind v4, hls.js — phone-shell UI with bottom tab navigation
+- **Frontend**: Next.js 16 (App Router), Tailwind v4, hls.js — phone-shell UI, bottom tabs, snap-scroll episode feed
 - **Backend**: FastAPI, SQLAlchemy 2 + Alembic, JWT auth (httpOnly cookies)
 - **Database**: SQLite for dev out-of-the-box; Neon Postgres in production
-- **Video**: S3 originals → FFmpeg HLS ladder (1080/720/480) → CloudFront signed cookies; fully local dev mode with zero cloud setup
+- **Video**: S3 originals → FFmpeg HLS ladder → CloudFront signed cookies; fully local dev mode with zero cloud setup
 - **Images**: ImageKit (thumbnails) with local fallback; **Payments**: Razorpay Subscriptions
+
+## Documentation
+
+| Doc | What's in it |
+|---|---|
+| [docs/architecture.md](docs/architecture.md) | System design, schema, entitlement rule, auth/video/billing flows |
+| [docs/api-reference.md](docs/api-reference.md) | Every endpoint with shapes and error codes |
+| [docs/content-ingestion.md](docs/content-ingestion.md) | Adding videos via the ingest CLI, quality ladder, freemium gate |
+| [docs/deployment.md](docs/deployment.md) | Neon, S3+CloudFront, Razorpay, ImageKit, hosting + production checklist |
 
 ## Prerequisites
 
