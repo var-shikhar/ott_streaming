@@ -124,6 +124,24 @@ class WatchProgress(Base):
     episode: Mapped["Episode"] = relationship(lazy="selectin")
 
 
+class EpisodeLike(Base):
+    __tablename__ = "episode_likes"
+    user_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("users.id"), primary_key=True)
+    episode_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("episodes.id"), primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
+
+
+class Comment(Base):
+    __tablename__ = "comments"
+    id: Mapped[uuid.UUID] = mapped_column(sa.Uuid, primary_key=True, default=uuid.uuid4)
+    episode_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("episodes.id"), index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("users.id"))
+    body: Mapped[str] = mapped_column(sa.String(500))
+    created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
+
+    user: Mapped["User"] = relationship(lazy="selectin")
+
+
 class WatchlistItem(Base):
     __tablename__ = "watchlist"
     user_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("users.id"), primary_key=True)

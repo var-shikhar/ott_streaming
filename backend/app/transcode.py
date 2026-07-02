@@ -26,7 +26,8 @@ def transcode_to_hls(src: Path, outdir: Path) -> int:
              str(outdir / f"{height}.m3u8")],
             check=True, capture_output=True)
     lines = ["#EXTM3U", "#EXT-X-VERSION:3"]
-    for height, kbps in RENDITIONS:
+    # lowest rendition first: players start on it instantly, then adapt up
+    for height, kbps in sorted(RENDITIONS, key=lambda r: r[1]):
         width = int(height * 9 / 16 / 2) * 2
         lines.append(f"#EXT-X-STREAM-INF:BANDWIDTH={kbps * 1100},RESOLUTION={width}x{height}")
         lines.append(f"{height}.m3u8")

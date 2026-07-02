@@ -16,7 +16,8 @@ export default function Hero({ items }: { items: SeriesSummary[] }) {
   return (
     <div className="relative h-[430px] w-full overflow-hidden">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={s.poster_url} alt={s.title} className="h-full w-full object-cover" />
+      <img key={s.id} src={s.poster_url} alt={s.title}
+           className="h-full w-full object-cover animate-fade-in" />
       <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/30 to-zinc-950/10" />
       <div className="absolute inset-x-0 bottom-4 px-4">
         <p className="text-[10px] font-semibold uppercase tracking-widest text-rose-400">Featured</p>

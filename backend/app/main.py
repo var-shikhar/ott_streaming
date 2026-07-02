@@ -32,9 +32,10 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 from app.routers import (auth, billing, catalog, media,  # noqa: E402
-                         playback, progress, watchlist, webhooks)
+                         playback, progress, social, watchlist, webhooks)
 
 app.include_router(auth.router)
+app.include_router(social.router)
 app.include_router(catalog.router)
 app.include_router(progress.router)
 app.include_router(watchlist.router)

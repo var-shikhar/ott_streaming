@@ -6,6 +6,7 @@ export interface SeriesSummary {
 export interface EpisodeSummary {
   id: string; episode_number: number; title: string; duration_seconds: number;
   thumbnail_url: string; is_free: boolean; locked: boolean;
+  like_count: number; comment_count: number; liked_by_me: boolean;
 }
 export interface SeriesDetail extends SeriesSummary { episodes: EpisodeSummary[] }
 export interface GenreOut { slug: string; name: string }
@@ -25,4 +26,7 @@ export interface CurrentSubscription {
 export interface PlaybackInfo {
   url: string; episode_id: string; episode_number: number;
   series_slug: string; resume_position: number;
+}
+export interface CommentOut {
+  id: string; body: string; created_at: string; user_name: string; is_mine: boolean;
 }

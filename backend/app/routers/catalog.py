@@ -6,6 +6,7 @@ from app.db import get_db
 from app.deps import get_optional_user
 from app.entitlement import active_subscription
 from app.errors import ApiError
+from app.routers.social import social_stats
 
 router = APIRouter(prefix="/api/v1", tags=["catalog"])
 
@@ -26,7 +27,7 @@ def series_out(s: models.Series) -> dict:
 
 def published(db: Session):
     return db.query(models.Series).filter(models.Series.status == "published")
-
+ 
 
 @router.get("/home")
 def home(db: Session = Depends(get_db), user=Depends(get_optional_user)):
@@ -69,12 +70,15 @@ def series_detail(slug: str, db: Session = Depends(get_db), user=Depends(get_opt
         raise ApiError(404, "not_found", "Series not found")
     subscribed = active_subscription(db, user) is not None
     out = series_out(s)
+    episodes = ready_episodes(s)
+    stats = social_stats(db, [e.id for e in episodes], user)
     out["episodes"] = [{
         "id": str(e.id), "episode_number": e.episode_number, "title": e.title,
         "duration_seconds": e.duration_seconds, "thumbnail_url": e.thumbnail_url,
         "is_free": e.episode_number <= s.free_episode_count,
         "locked": e.episode_number > s.free_episode_count and not subscribed,
-    } for e in ready_episodes(s)]
+        **stats[e.id],
+    } for e in episodes]
     return out
 
 

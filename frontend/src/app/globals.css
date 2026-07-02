@@ -3,3 +3,68 @@
 @theme inline {
   --font-sans: var(--font-geist-sans);
 }
+
+@theme {
+  --animate-fade-in: fade-in 0.35s ease-out both;
+  --animate-fade-in-up: fade-in-up 0.4s ease-out both;
+  --animate-shimmer: shimmer 1.4s linear infinite;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+}
+
+/* hide scrollbars entirely (rails, swipe feed) */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* slim, dark scrollbar (long vertical lists) */
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-zinc-700) transparent;
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-zinc-700);
+    border-radius: 4px;
+  }
+}
+
+/* skeleton shimmer block */
+@utility skeleton {
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    100deg,
+    var(--color-zinc-900) 40%,
+    var(--color-zinc-800) 50%,
+    var(--color-zinc-900) 60%
+  );
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-zinc-800) transparent;
+}
+html::-webkit-scrollbar {
+  width: 6px;
+}
+html::-webkit-scrollbar-thumb {
+  background: var(--color-zinc-800);
+  border-radius: 6px;
+}

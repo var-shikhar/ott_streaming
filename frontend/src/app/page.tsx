@@ -12,12 +12,12 @@ export default async function HomePage() {
     </div>;
   }
   return (
-    <div className="pb-4">
+    <div className="animate-fade-in pb-4">
       <Hero items={data.featured} />
       {data.continue_watching.length > 0 && (
         <section className="mt-6">
           <h2 className="mb-2 px-4 text-base font-bold">Continue Watching</h2>
-          <div className="flex gap-3 overflow-x-auto px-4 pb-2">
+          <div className="flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-none">
             {data.continue_watching.map((c) => (
               <Link key={c.episode_id} href={`/watch/${c.series.slug}/${c.episode_number}`}
                     className="w-28 shrink-0">

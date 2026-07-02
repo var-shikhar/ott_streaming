@@ -10,7 +10,7 @@ export default async function SeriesPage({ params }: { params: Promise<{ slug: s
   const series = await serverFetch<SeriesDetail>(`/api/v1/series/${slug}`);
   if (!series) notFound();
   return (
-    <div className="pb-4">
+    <div className="animate-fade-in pb-4">
       <div className="relative h-52 w-full overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={series.banner_url} alt={series.title} className="h-full w-full object-cover" />
