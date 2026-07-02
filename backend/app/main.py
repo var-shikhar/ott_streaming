@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -19,6 +20,15 @@ app.add_middleware(
 async def http_exception_handler(request: Request, exc: HTTPException):
     detail = exc.detail if isinstance(exc.detail, dict) else {"code": "error", "message": str(exc.detail)}
     return JSONResponse(status_code=exc.status_code, content={"error": detail}, headers=exc.headers)
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    first = exc.errors()[0] if exc.errors() else {}
+    field = ".".join(str(p) for p in first.get("loc", []) if p != "body")
+    message = f"{field}: {first.get('msg', 'invalid input')}" if field else first.get("msg", "Invalid input")
+    return JSONResponse(status_code=422,
+                        content={"error": {"code": "validation_error", "message": message}})
 
 
 from app.routers import (auth, billing, catalog, media,  # noqa: E402
