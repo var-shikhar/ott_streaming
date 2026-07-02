@@ -31,7 +31,7 @@ A subscription-based short-drama OTT platform in the style of DramaBox, JioHotst
 
 | Concern | Decision | Rationale |
 |---|---|---|
-| Frontend | Next.js (App Router), Tailwind, shadcn/ui, hls.js | User requirement |
+| Frontend | Next.js (App Router), Tailwind, hls.js | User requirement (plain Tailwind components; shadcn/ui deferred — YAGNI) |
 | Backend | FastAPI, single API for all business logic | Option A chosen: clean separation; future admin reuses API |
 | ORM | SQLAlchemy 2 + Alembic (Drizzle dropped) | Drizzle is TS-only, cannot run in Python; Neon works with any Postgres client |
 | DB | Neon Postgres — pooled URL for app, direct URL for Alembic | PgBouncer + DDL constraint |
@@ -131,7 +131,7 @@ JSON error envelope: `{ "error": { "code": "...", "message": "..." } }`. `401` =
 
 ## 9. Testing
 
-- **Backend (pytest):** auth flows, entitlement rule matrix (free ep / no sub / active sub / expired sub / cancelled-but-in-period), webhook handlers with signed fixture payloads (activate/charge/cancel/duplicate), catalog endpoints. Tests run on SQLite (aiosqlite); models avoid Postgres-only column types so the schema stays portable.
+- **Backend (pytest):** auth flows, entitlement rule matrix (free ep / no sub / active sub / expired sub / cancelled-but-in-period), webhook handlers with signed fixture payloads (activate/charge/cancel/duplicate), catalog endpoints. Backend uses sync SQLAlchemy (simpler and safer for this workload); tests run on in-memory SQLite, so models avoid Postgres-only column types and the schema stays portable.
 - **Frontend:** TypeScript strict + build as the gate; typed API client; player and checkout verified manually against seeded content.
 - **Seed script:** genres, 3–4 sample series (placeholder/public-domain vertical videos), plans — app is demo-able immediately after setup.
 
