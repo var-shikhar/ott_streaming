@@ -47,11 +47,13 @@ def upload_thumbnail(episode_id: str, jpg: Path) -> str:
         with open(jpg, "rb") as f:
             result = ik.upload_file(file=f, file_name=f"{episode_id}.jpg")
         return result.url
-    # local fallback: keep it next to the HLS files, served by /media
+    # No ImageKit configured: keep a local copy for dev, but store a URL that
+    # works from ANY device — a machine-local /media URL breaks the moment the
+    # DB is shared (e.g. Neon rows read by the deployed frontend on a phone).
     dest = Path(settings.media_root) / episode_id / "thumb.jpg"
     dest.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(jpg, dest)
-    return f"{settings.api_base_url}/media/{episode_id}/thumb.jpg"
+    return f"https://picsum.photos/seed/{episode_id}/360/640"
 
 
 def ingest(args) -> None:
