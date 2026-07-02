@@ -42,7 +42,7 @@ def _issue_session(response: Response, db: Session, user: models.User) -> None:
         user_id=user.id, token_hash=token_hash,
         expires_at=datetime.now(timezone.utc) + timedelta(days=settings.refresh_token_days)))
     db.commit()
-    common = dict(httponly=True, samesite="lax", secure=settings.cookie_secure)
+    common = dict(httponly=True, samesite=settings.cookie_samesite, secure=settings.cookie_secure)
     response.set_cookie("access_token", create_access_token(str(user.id)),
                         max_age=settings.access_token_minutes * 60, **common)
     response.set_cookie("refresh_token", raw,

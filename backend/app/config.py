@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     access_token_minutes: int = 15
     refresh_token_days: int = 30
     cookie_secure: bool = False
+    cookie_samesite: str = "lax"  # use "none" (+ cookie_secure=true) when frontend and API are on different domains
 
     frontend_origin: str = "http://localhost:3000"
     api_base_url: str = "http://localhost:8000"

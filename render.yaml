@@ -1,0 +1,56 @@
+# Render Blueprint for the ShortReel FastAPI backend.
+# Frontend deploys separately on Vercel (root directory: frontend/).
+services:
+  - type: web
+    name: shortreel-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt && alembic upgrade head
+    startCommand: gunicorn -w 2 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:$PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL            # Neon POOLED url (postgresql+psycopg://...-pooler...?sslmode=require)
+        sync: false
+      - key: DIRECT_DATABASE_URL     # Neon direct url (for alembic in buildCommand)
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_SAMESITE         # vercel.app <-> onrender.com is cross-site
+        value: none
+      - key: FRONTEND_ORIGIN         # e.g. https://shortreel.vercel.app (exact origin, no trailing slash)
+        sync: false
+      - key: API_BASE_URL            # e.g. https://shortreel-api.onrender.com
+        sync: false
+      - key: STORAGE_MODE            # Render's disk is ephemeral -> videos must live in S3
+        value: s3
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REGION
+        value: ap-south-1
+      - key: S3_BUCKET
+        sync: false
+      - key: CLOUDFRONT_DOMAIN
+        sync: false
+      - key: CLOUDFRONT_KEY_PAIR_ID
+        sync: false
+      - key: CLOUDFRONT_PRIVATE_KEY_PATH
+        sync: false
+      - key: CDN_COOKIE_DOMAIN
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      - key: IMAGEKIT_PUBLIC_KEY
+        sync: false
+      - key: IMAGEKIT_PRIVATE_KEY
+        sync: false
+      - key: IMAGEKIT_URL_ENDPOINT
+        sync: false

@@ -57,16 +57,41 @@ the SDK in the backend venv (`pip install imagekitio`). Ingest thumbnails then u
 to ImageKit automatically; series posters/banners accept any URL (point them at
 ImageKit assets via `--poster-url`).
 
-## 5. App hosting
+## 5. App hosting — Render (backend) + Vercel (frontend)
 
-- **Backend**: any host that runs uvicorn (Railway/Render/Fly/EC2):
-  `uvicorn app.main:app --host 0.0.0.0 --port 8000`. Set `JWT_SECRET` (long random),
-  `COOKIE_SECURE=true`, `FRONTEND_ORIGIN=https://app.example.com`,
-  `API_BASE_URL=https://api.example.com`.
-- **Frontend**: Vercel is the natural fit (Next.js 16). Set
-  `NEXT_PUBLIC_API_URL=https://api.example.com` and `NEXT_PUBLIC_RAZORPAY_KEY_ID`.
-- Cookies are SameSite=Lax, so serve frontend and API from the **same parent domain**
-  (app.example.com + api.example.com) for auth to work across them.
+### Backend on Render
+
+A blueprint is committed at the repo root (`render.yaml`) — "New + → Blueprint" on a
+GitHub-connected repo picks it up. Manual setup equivalent:
+
+- **Root Directory**: `backend` (the app is `backend/app/main.py`, not a root `main.py`)
+- **Build command**: `pip install -r requirements.txt && alembic upgrade head`
+  (migrations run against `DIRECT_DATABASE_URL` on every deploy — idempotent)
+- **Start command**: `gunicorn -w 2 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:$PORT`
+  (must bind Render's `$PORT`; 2 workers fits the free tier)
+- **Health check path**: `/health`
+- Render's filesystem is **ephemeral** — production must use Neon (`DATABASE_URL`)
+  and `STORAGE_MODE=s3`. SQLite/local media only exist for local dev.
+- Ingest runs from your own machine (needs FFmpeg) pointed at the same Neon + S3 via
+  a local `.env` — the Render service never transcodes.
+
+### Frontend on Vercel
+
+- Import the repo, set **Root Directory** to `frontend` (framework auto-detected).
+- Env vars: `NEXT_PUBLIC_API_URL=https://<service>.onrender.com`,
+  `NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_live_...`.
+
+### Cross-domain cookies (IMPORTANT)
+
+`*.vercel.app` and `*.onrender.com` are different registrable domains, so the auth
+cookies must be sent cross-site:
+
+- On Render set `COOKIE_SAMESITE=none` and `COOKIE_SECURE=true` (the blueprint does).
+- `FRONTEND_ORIGIN` must be the exact Vercel origin (no trailing slash) for CORS.
+- With custom domains under one parent (app.example.com + api.example.com) you can
+  switch back to `COOKIE_SAMESITE=lax`.
+- Note: some browsers (Safari ITP) restrict third-party cookies even with
+  SameSite=None — custom domains under one parent are the robust long-term setup.
 
 ## 6. Production checklist
 
