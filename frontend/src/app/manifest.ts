@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "ShortReel — Short Dramas, Big Feelings",
-    short_name: "ShortReel",
-    description: "Vertical micro-dramas and short films. First episodes free.",
+    name: "Qisso — Reels, Series & Movies",
+    short_name: "Qisso",
+    description: "Every story, one scene at a time. Vertical micro-dramas and films — first episodes free.",
     start_url: "/",
     display: "standalone",
     orientation: "any",

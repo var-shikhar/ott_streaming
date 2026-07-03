@@ -1,4 +1,4 @@
-# ShortReel — Short-Drama Streaming Platform
+# Qisso — Short-Drama Streaming Platform
 
 A subscription-based, **mobile-first** OTT web app for vertical micro-dramas (DramaBox / Tadka style): series of 1–3 minute portrait episodes watched in a **TikTok-style vertical swipe feed** — with likes, comments, and sharing — where the first few episodes are free and the rest unlock with a Razorpay subscription.
 

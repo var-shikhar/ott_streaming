@@ -1,8 +1,8 @@
-/* ShortReel service worker.
+/* Qisso service worker.
  * Conservative caching: static assets cache-first, navigations network-first
  * with an offline fallback. API calls and video segments are NEVER cached
  * (personalized + entitlement-gated). */
-const CACHE = "shortreel-v1";
+const CACHE = "qisso-v1";
 const OFFLINE_URL = "/offline.html";
 
 self.addEventListener("install", (event) => {

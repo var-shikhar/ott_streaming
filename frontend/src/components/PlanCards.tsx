@@ -48,7 +48,7 @@ export default function PlanCards({ plans }: { plans: Plan[] }) {
       new window.Razorpay({
         key: res.razorpay_key_id,
         subscription_id: res.razorpay_subscription_id,
-        name: "ShortReel",
+        name: "Qisso",
         description: "Unlimited dramas & films",
         theme: { color: "#e11d48" },
         handler: async () => {

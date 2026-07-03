@@ -1,4 +1,4 @@
-# ShortReel — repo guide
+# Qisso — repo guide
 
 Subscription-based short-drama streaming app (DramaBox-style). **Mobile-first phone-shell
 UI** — every screen is designed for portrait phones (max-w-md column, bottom tab bar).

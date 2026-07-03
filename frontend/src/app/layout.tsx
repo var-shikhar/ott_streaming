@@ -11,12 +11,12 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "ShortReel — Short Dramas, Big Feelings",
-  description: "Vertical micro-drama series. First episodes free.",
+  title: "Qisso — Reels, Series & Movies",
+  description: "Every story, one scene at a time. Vertical micro-dramas and films — first episodes free.",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "ShortReel",
+    title: "Qisso",
   },
   icons: {
     apple: "/icons/icon-180.png",

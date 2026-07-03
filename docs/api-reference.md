@@ -1,4 +1,4 @@
-# ShortReel — API Reference
+# Qisso — API Reference
 
 Base URL: `http://localhost:8000` (interactive docs at `/docs`). All routes under `/api/v1`
 unless noted. Auth is cookie-based (`access_token` httpOnly JWT); protected routes return

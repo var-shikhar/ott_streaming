@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 
-app = FastAPI(title="ShortReel API")
+app = FastAPI(title="Qisso API")
 
 app.add_middleware(
     CORSMiddleware,

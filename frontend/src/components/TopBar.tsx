@@ -35,7 +35,7 @@ export default function TopBar() {
     <header className="sticky top-0 z-40 border-b border-zinc-800/60 bg-zinc-950/90 backdrop-blur">
       <div className="flex h-12 items-center justify-between gap-2 px-4">
         <Link href="/" className="text-lg font-extrabold tracking-tight text-rose-500">
-          ShortReel
+          Qisso
         </Link>
         <nav aria-label="Mode"
              className="flex rounded-full border border-zinc-800 bg-zinc-900 p-0.5 text-xs font-semibold">

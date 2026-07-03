@@ -1,4 +1,4 @@
-# ShortReel — Architecture
+# Qisso — Architecture
 
 ## System overview
 

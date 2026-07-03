@@ -1,4 +1,4 @@
-# ShortReel — Deployment Guide (dev → production)
+# Qisso — Deployment Guide (dev → production)
 
 Everything runs locally with zero external services. Production is a set of env-var
 swaps in `backend/.env` (see `backend/.env.example`) plus infra setup below.
@@ -17,7 +17,7 @@ goes direct.
 
 ## 2. Video — S3 + CloudFront signed cookies
 
-1. Create a private S3 bucket (e.g. `shortreel-videos`), block all public access.
+1. Create a private S3 bucket (e.g. `qisso-videos`), block all public access.
 2. Create a CloudFront distribution with the bucket as origin (Origin Access Control).
 3. Create a **key pair for signed cookies**: generate an RSA key
    (`openssl genrsa -out cloudfront_private_key.pem 2048`), upload the public key in

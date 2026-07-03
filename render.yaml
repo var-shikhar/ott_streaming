@@ -1,4 +1,4 @@
-# Render Blueprint for the ShortReel FastAPI backend.
+# Render Blueprint for the Qisso FastAPI backend.
 # Frontend deploys separately on Vercel (root directory: frontend/).
 services:
   - type: web

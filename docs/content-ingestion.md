@@ -1,4 +1,4 @@
-# ShortReel — Content Ingestion Guide
+# Qisso — Content Ingestion Guide
 
 How video content gets into the platform today (CLI-based; the same pipeline code will
 back the admin panel's upload API later).
