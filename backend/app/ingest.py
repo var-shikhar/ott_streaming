@@ -143,7 +143,8 @@ def ingest(args) -> None:
                 tmpdir = Path(tmp)
                 if settings.storage_mode == "imagekit":
                     mp4 = tmpdir / "video.mp4"
-                    episode.duration_seconds = make_progressive_mp4(src, mp4)
+                    episode.duration_seconds = make_progressive_mp4(
+                        src, mp4, max_mb=args.max_video_mb)
                     episode.hls_path = upload_video_imagekit(str(episode.id), mp4)
                 else:
                     hls_dir = tmpdir / "hls"
@@ -188,6 +189,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--cast", default="", help='comma list "Name:Character,Name2"')
     p.add_argument("--stills", type=int, default=0,
                    help="movies: extract N stills evenly across the runtime")
+    p.add_argument("--max-video-mb", type=int, default=90,
+                   help="imagekit mode: encode size budget (raise for feature films)")
     return p
 
 
