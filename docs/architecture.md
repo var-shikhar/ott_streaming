@@ -58,11 +58,18 @@ users ─┬─< refresh_tokens
        └─< comments >────── episodes
 
 series ─< episodes            series >─< genres (series_genres)
+series ─< credits             series ─< stills          (movies-mode metadata)
 webhook_events (idempotency log, unique razorpay_event_id)
 ```
 
 Key columns:
-- `series.free_episode_count` — first N episodes are free (default 3, seed uses 2)
+- `series.content_type` `series|movie` — one shared catalog, two UI modes. A movie is
+  one series row + exactly one landscape episode (`episode_number=1`) plus `credits`
+  (director/cast) and `stills` rows; `release_year`/`maturity_rating` are movie-grade
+  metadata. Reels surfaces filter to `series`; `/api/v1/movies/*` serves movies mode.
+- `series.free_episode_count` — first N episodes are free (default 3, seed uses 2);
+  for movies it's the paywall switch: `1` = free film, `0` = premium (entitlement
+  rule unchanged)
 - `series.status` `draft|published`; `episodes.status` `processing|ready|failed` —
   only published+ready content is ever exposed by the API
 - `subscriptions.status` `created|active|past_due|cancelled|expired` + `current_period_end`
@@ -137,6 +144,16 @@ duplicates return `{"status": "duplicate"}` without reprocessing).
   autoplay-mute fallback ("Tap for sound")
 - `components/ActionRail.tsx` / `CommentsSheet.tsx` — like/share buttons and the
   bottom-sheet comments UI
+- **Movies mode** — `TopBar` hosts a `Reels | Movies` segmented switcher (mode is
+  route-based: everything under `/movies/*`). `app/movies` = landscape hero + 16:9
+  `MovieRail`s; `app/movies/[slug]` = detail (metadata line, `CastList`,
+  `StillsGallery`, More Like This); `app/movies/[slug]/watch` = `MoviePlayer`, a
+  `fixed inset-0` landscape player (custom controls: scrub bar + buffered indicator,
+  ±10 s, mute, fullscreen with best-effort orientation lock) built on
+  `lib/use-hls-playback.ts` (hls/mp4 attach + resume + paywall detection; YouTube
+  sources surface as `youtubeId` and render the official embed). `TopBar` and
+  `BottomNav` self-hide on the movie watch route; `BottomNav`'s Home tab retargets
+  to `/movies` while in movies mode
 - Skeleton `loading.tsx` files + shimmer/fade utilities in `globals.css`
 
 ## Error contract

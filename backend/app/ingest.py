@@ -23,16 +23,18 @@ from app.transcode import extract_frame, extract_thumbnail, make_progressive_mp4
 
 
 def _imagekit_client():
-    from imagekitio import ImageKit  # optional dep: pip install imagekitio
-    return ImageKit(private_key=settings.imagekit_private_key,
-                    public_key=settings.imagekit_public_key,
-                    url_endpoint=settings.imagekit_url_endpoint)
+    from imagekitio import ImageKit  # optional dep: pip install imagekitio (v5 SDK)
+    return ImageKit(private_key=settings.imagekit_private_key)
+
+
+def _imagekit_upload(file_path: Path, file_name: str) -> str:
+    with open(file_path, "rb") as f:
+        result = _imagekit_client().files.upload(file=f, file_name=file_name)
+    return result.url
 
 
 def upload_video_imagekit(episode_id: str, mp4: Path) -> str:
-    with open(mp4, "rb") as f:
-        result = _imagekit_client().upload_file(file=f, file_name=f"{episode_id}.mp4")
-    return result.url
+    return _imagekit_upload(mp4, f"{episode_id}.mp4")
 
 
 def parse_cast(cast_arg: str) -> list[tuple[str, str]]:
@@ -79,9 +81,7 @@ def get_or_create_series(db, args) -> models.Series:
 
 def upload_image(name: str, jpg: Path, placeholder_size: tuple[int, int]) -> str:
     if settings.imagekit_private_key:
-        with open(jpg, "rb") as f:
-            result = _imagekit_client().upload_file(file=f, file_name=f"{name}.jpg")
-        return result.url
+        return _imagekit_upload(jpg, f"{name}.jpg")
     # No ImageKit configured: keep a local copy for dev, but store a URL that
     # works from ANY device — a machine-local /media URL breaks the moment the
     # DB is shared (e.g. Neon rows read by the deployed frontend on a phone).

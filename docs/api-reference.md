@@ -24,15 +24,20 @@ unless noted. Auth is cookie-based (`access_token` httpOnly JWT); protected rout
 
 | Method & path | Returns |
 |---|---|
-| `GET /home` | `{featured, trending, new_releases, genre_rails: [{genre, series}], continue_watching}` (continue_watching filled when authenticated) |
-| `GET /series` | `SeriesOut[]` |
+| `GET /home` | `{featured, trending, new_releases, genre_rails: [{genre, series}], continue_watching}` — series only (continue_watching filled when authenticated) |
+| `GET /series` | `SeriesOut[]` (series only) |
 | `GET /series/{slug}` | `SeriesOut` + `episodes: EpisodeOut[]`. `404 not_found` |
 | `GET /genres` | `[{slug, name}]` |
-| `GET /genres/{slug}/series` | `{genre, series}` |
-| `GET /search?q=text` | `SeriesOut[]` (title match, max 20) |
+| `GET /genres/{slug}/series` | `{genre, series}`; `?content_type=` (default `series`) |
+| `GET /search?q=text` | `SeriesOut[]` (title match, max 20); optional `&content_type=series\|movie` (omitted = mixed) |
+| `GET /movies/home` | same shape as `/home`, movies only |
+| `GET /movies` | `SeriesOut[]` (movies, newest first) |
+| `GET /movies/{slug}` | `SeriesOut` + `{episode: {id, duration_seconds, thumbnail_url, is_free, locked} \| null, credits: [{person_name, role, character_name}], stills: [url], related: SeriesOut[]}`. `404 not_found` (also for series slugs) |
 
 **SeriesOut:** `{id, slug, title, synopsis, language, poster_url, banner_url,
-free_episode_count, is_featured, view_count, genres: [name], episode_count}`
+free_episode_count, is_featured, view_count, genres: [name], episode_count,
+content_type: "series"|"movie", release_year, maturity_rating,
+duration_seconds}` — `duration_seconds` is the film runtime for movies, 0 for series.
 
 **EpisodeOut:** `{id, episode_number, title, duration_seconds, thumbnail_url,
 is_free, locked, like_count, comment_count, liked_by_me}` — `locked` already accounts
@@ -44,7 +49,7 @@ Only `published` series and `ready` episodes are ever returned.
 
 | Method & path | Auth | Notes |
 |---|---|---|
-| `GET /episodes/{id}/playback` | optional | Entitlement-gated. `200 {url, episode_id, episode_number, series_slug, resume_position}`; in s3 mode also sets CloudFront signed cookies. `403 subscription_required` when locked, `404` when missing/not-ready. Increments series view_count. |
+| `GET /episodes/{id}/playback` | optional | Entitlement-gated. `200 {type: "hls"\|"mp4"\|"youtube", url, youtube_id?, episode_id, episode_number, series_slug, resume_position}` — `mp4` is a direct CDN URL (ImageKit mode), `youtube` plays via the official embed; in s3 mode also sets CloudFront signed cookies. `403 subscription_required` when locked, `404` when missing/not-ready. Increments series view_count. |
 | `GET /media/{episode_id}/{file}` | optional | Local mode only — serves HLS/thumbnails; re-checks entitlement on `master.m3u8`. |
 
 ## Progress & watchlist (auth required)

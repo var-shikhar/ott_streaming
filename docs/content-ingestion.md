@@ -61,9 +61,35 @@ Defined in `backend/app/transcode.py` (`RENDITIONS`):
 
 Adjust the list to change quality/cost; both ingest and seed pick it up automatically.
 
+## Ingest a movie (Movies mode)
+
+A movie is one catalog row + one **landscape** video (episode 1 internally):
+
+```bash
+.venv/Scripts/python -m app.ingest path/to/film.mp4 \
+  --series-slug daal --series-title "Daal" \
+  --content-type movie \
+  --release-year 2025 --maturity-rating "U/A 13+" \
+  --director "Arjun Mehta" \
+  --cast "Riya Sen:Asha,Vik Das:Bhola" \
+  --stills 4 \
+  --genres drama --synopsis "..." --featured
+```
+
+Differences from series ingest:
+
+- Transcodes to the **landscape ladder** (480/720/1080, 16:9 master playlist,
+  still lowest-rendition-first).
+- `--free-episodes` defaults to **0 = premium**; pass `--free-episodes 1` for a free film.
+- `--director` / `--cast "Name:Character,..."` become `credits` rows (director first).
+- `--stills N` extracts N frames evenly across the runtime for the detail-page gallery
+  (ImageKit when configured, placeholder URLs otherwise).
+- Credits/stills are only written the first time (idempotent per slug).
+
 ## Demo data
 
-`python -m app.seed` creates 5 genres, 3 plans, and 4 demo series × 5 episodes with
+`python -m app.seed` creates 5 genres, 3 plans, 4 demo series × 5 episodes, and
+4 demo movies (landscape clips with credits + stills; one free, three premium) with
 FFmpeg-generated test clips. Idempotent — existing slugs are skipped.
 
 ## Freemium gate

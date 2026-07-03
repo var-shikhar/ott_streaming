@@ -35,4 +35,8 @@ PORT=3001 npm run dev
 - Models use cross-database types only (tests run on in-memory SQLite).
 - Watch feed: only the ACTIVE slide attaches an hls.js player; master playlists list
   the lowest rendition first (renderer freezes otherwise on modest hardware).
+- Two content modes share one catalog: `series.content_type` is `series|movie`. A movie is
+  ONE series row + ONE landscape episode (`episode_number=1`); `free_episode_count` 1=free
+  film, 0=premium. Reels surfaces (`/home`, `/series`, genre/search defaults) filter
+  `content_type="series"`; movies mode uses `/api/v1/movies/*` and the `/movies/*` routes.
 - Money = INR paise; timestamps = UTC.
