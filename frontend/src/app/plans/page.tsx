@@ -8,7 +8,8 @@ export default async function PlansPage() {
     <div className="px-4 py-8">
       <h1 className="text-2xl font-extrabold leading-tight">Watch everything. One plan.</h1>
       <p className="mt-2 text-sm text-zinc-400">
-        First episodes of every series are always free. Subscribe to unlock the rest.
+        First episodes of every series are free. Subscribe to unlock everything —
+        all episodes and every film.
       </p>
       <div className="mt-6">
         <PlanCards plans={plans} />

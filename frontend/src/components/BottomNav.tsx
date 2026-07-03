@@ -25,10 +25,14 @@ const TABS = [
 export default function BottomNav() {
   const pathname = usePathname();
   if (pathname.startsWith("/watch/")) return null; // fullscreen player
+  if (/^\/movies\/[^/]+\/watch$/.test(pathname)) return null; // movie player
+  const inMovies = pathname === "/movies" || pathname.startsWith("/movies/");
+  const tabs = TABS.map((t) =>
+    t.label === "Home" ? { ...t, href: inMovies ? "/movies" : "/" } : t);
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md border-t border-zinc-800/60 bg-zinc-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
       <div className="grid grid-cols-4">
-        {TABS.map((tab) => {
+        {tabs.map((tab) => {
           const active = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href);
           return (
             <Link key={tab.href} href={tab.href}

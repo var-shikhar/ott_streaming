@@ -49,7 +49,7 @@ export default function PlanCards({ plans }: { plans: Plan[] }) {
         key: res.razorpay_key_id,
         subscription_id: res.razorpay_subscription_id,
         name: "ShortReel",
-        description: "Unlimited short dramas",
+        description: "Unlimited dramas & films",
         theme: { color: "#e11d48" },
         handler: async () => {
           await pollActivation();
@@ -81,7 +81,7 @@ export default function PlanCards({ plans }: { plans: Plan[] }) {
             </p>
           </div>
           <ul className="mt-3 space-y-1 text-xs text-zinc-400">
-            <li>✓ All episodes, every series</li>
+            <li>✓ Every series &amp; every film</li>
             <li>✓ New releases daily</li>
             <li>✓ Cancel anytime</li>
           </ul>

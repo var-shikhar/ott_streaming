@@ -4,10 +4,10 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "ShortReel — Short Dramas, Big Feelings",
     short_name: "ShortReel",
-    description: "Vertical micro-drama series. First episodes free.",
+    description: "Vertical micro-dramas and short films. First episodes free.",
     start_url: "/",
     display: "standalone",
-    orientation: "portrait",
+    orientation: "any",
     background_color: "#000000",
     theme_color: "#09090b",
     categories: ["entertainment"],

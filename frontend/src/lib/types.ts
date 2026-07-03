@@ -2,6 +2,17 @@ export interface SeriesSummary {
   id: string; slug: string; title: string; synopsis: string; language: string;
   poster_url: string; banner_url: string; free_episode_count: number;
   is_featured: boolean; view_count: number; genres: string[]; episode_count: number;
+  content_type: "series" | "movie"; release_year: number | null;
+  maturity_rating: string; duration_seconds: number;
+}
+export interface Credit { person_name: string; role: string; character_name: string }
+export interface MovieEpisode {
+  id: string; duration_seconds: number; thumbnail_url: string;
+  is_free: boolean; locked: boolean;
+}
+export interface MovieDetail extends SeriesSummary {
+  episode: MovieEpisode | null; credits: Credit[]; stills: string[];
+  related: SeriesSummary[];
 }
 export interface EpisodeSummary {
   id: string; episode_number: number; title: string; duration_seconds: number;

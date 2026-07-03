@@ -47,9 +47,13 @@ export default async function AccountPage() {
         <ul className="mt-2 space-y-2">
           {history.map((h) => (
             <li key={h.episode_id}>
-              <Link href={`/watch/${h.series.slug}/${h.episode_number}`}
+              <Link href={h.series.content_type === "movie"
+                            ? `/movies/${h.series.slug}/watch`
+                            : `/watch/${h.series.slug}/${h.episode_number}`}
                     className="text-sm text-zinc-300 active:text-white">
-                {h.series.title} — Ep {h.episode_number} ({h.position_seconds}s in)
+                {h.series.content_type === "movie"
+                  ? `${h.series.title} (${h.position_seconds}s in)`
+                  : `${h.series.title} — Ep ${h.episode_number} (${h.position_seconds}s in)`}
               </Link>
             </li>
           ))}

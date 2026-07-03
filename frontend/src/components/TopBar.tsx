@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api-client";
 import type { User } from "@/lib/types";
@@ -10,6 +10,8 @@ export default function TopBar() {
   const [user, setUser] = useState<User | null>(null);
   const [loaded, setLoaded] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+  const inMovies = pathname === "/movies" || pathname.startsWith("/movies/");
 
   useEffect(() => {
     apiFetch<User>("/api/v1/auth/me")
@@ -25,12 +27,25 @@ export default function TopBar() {
     router.refresh();
   }
 
+  if (/^\/movies\/[^/]+\/watch$/.test(pathname)) return null; // immersive movie player
+
   return (
     <header className="sticky top-0 z-40 border-b border-zinc-800/60 bg-zinc-950/90 backdrop-blur">
-      <div className="flex h-12 items-center justify-between px-4">
+      <div className="flex h-12 items-center justify-between gap-2 px-4">
         <Link href="/" className="text-lg font-extrabold tracking-tight text-rose-500">
           ShortReel
         </Link>
+        <nav aria-label="Mode"
+             className="flex rounded-full border border-zinc-800 bg-zinc-900 p-0.5 text-xs font-semibold">
+          <Link href="/" className={`rounded-full px-3 py-1 ${
+            !inMovies ? "bg-rose-600 text-white" : "text-zinc-400 active:text-white"}`}>
+            Reels
+          </Link>
+          <Link href="/movies" className={`rounded-full px-3 py-1 ${
+            inMovies ? "bg-rose-600 text-white" : "text-zinc-400 active:text-white"}`}>
+            Movies
+          </Link>
+        </nav>
         {!loaded ? null : user ? (
           <button onClick={logout} className="text-xs text-zinc-400 active:text-white">
             Log out
