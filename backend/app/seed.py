@@ -4,10 +4,26 @@ import tempfile
 from pathlib import Path
 
 from app import models
+from app.config import settings
 from app.db import SessionLocal
-from app.ingest import upload_image, upload_thumbnail
+from app.ingest import upload_image, upload_thumbnail, upload_video_imagekit
 from app.storage import get_storage
-from app.transcode import extract_frame, extract_thumbnail, transcode_to_hls
+from app.transcode import (extract_frame, extract_thumbnail, make_progressive_mp4,
+                           transcode_to_hls)
+
+
+def publish_clip(storage, episode, clip: Path, workdir: Path,
+                 orientation: str = "portrait") -> None:
+    """Store a clip the way the configured storage mode expects: progressive MP4
+    on ImageKit, or an HLS ladder via the Storage backend otherwise."""
+    if settings.storage_mode == "imagekit":
+        mp4 = workdir / "video.mp4"
+        episode.duration_seconds = make_progressive_mp4(clip, mp4)
+        episode.hls_path = upload_video_imagekit(str(episode.id), mp4)
+    else:
+        episode.duration_seconds = transcode_to_hls(clip, workdir / "hls",
+                                                    orientation=orientation)
+        episode.hls_path = storage.publish(str(episode.id), workdir / "hls")
 
 GENRES = [("romance", "Romance"), ("drama", "Drama"), ("comedy", "Comedy"),
           ("suspense", "Suspense"), ("action", "Action")]
@@ -119,8 +135,7 @@ def seed():
                     tmpdir = Path(tmp)
                     clip = tmpdir / "clip.mp4"
                     generate_clip(clip, spec["hue"], n)
-                    ep.duration_seconds = transcode_to_hls(clip, tmpdir / "hls")
-                    ep.hls_path = storage.publish(str(ep.id), tmpdir / "hls")
+                    publish_clip(storage, ep, clip, tmpdir, orientation="portrait")
                     thumb = tmpdir / "thumb.jpg"
                     extract_thumbnail(clip, thumb)
                     ep.thumbnail_url = upload_thumbnail(str(ep.id), thumb)
@@ -155,9 +170,7 @@ def seed():
                 tmpdir = Path(tmp)
                 clip = tmpdir / "film.mp4"
                 generate_movie_clip(clip, spec["hue"])
-                ep.duration_seconds = transcode_to_hls(clip, tmpdir / "hls",
-                                                       orientation="landscape")
-                ep.hls_path = storage.publish(str(ep.id), tmpdir / "hls")
+                publish_clip(storage, ep, clip, tmpdir, orientation="landscape")
                 thumb = tmpdir / "thumb.jpg"
                 extract_frame(clip, thumb, at_seconds=1.0, height=720)
                 ep.thumbnail_url = upload_image(str(ep.id), thumb, (640, 360))
