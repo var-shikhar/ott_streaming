@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Paywall from "@/components/Paywall";
 import { apiFetch } from "@/lib/api-client";
+import { isLoggedIn } from "@/lib/session";
 import { useHlsPlayback } from "@/lib/use-hls-playback";
 import type { MovieDetail, MovieEpisode } from "@/lib/types";
 
@@ -39,10 +40,11 @@ export default function MoviePlayer({ movie, episode }: {
   const { state, youtubeId } = useHlsPlayback(videoRef, episode.id, !episode.locked);
 
   const saveProgress = useCallback((position: number, completed: boolean) => {
+    if (isLoggedIn() === false) return; // guests: don't fire doomed requests
     apiFetch(`/api/v1/progress/${episode.id}`, {
       method: "PUT",
       body: JSON.stringify({ position_seconds: Math.floor(position), completed }),
-    }).catch(() => {}); // guests get a 401 — progress just isn't saved
+    }).catch(() => {}); // unknown auth state: fail silently
   }, [episode.id]);
 
   const poke = useCallback(() => {
