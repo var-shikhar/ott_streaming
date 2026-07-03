@@ -55,12 +55,20 @@ class Series(Base):
     free_episode_count: Mapped[int] = mapped_column(default=3)
     is_featured: Mapped[bool] = mapped_column(default=False)
     status: Mapped[str] = mapped_column(sa.String(20), default="published")  # draft|published
+    content_type: Mapped[str] = mapped_column(sa.String(10), default="series", index=True)
+    # series|movie — a movie is one Series row + exactly one landscape Episode (episode_number=1)
+    release_year: Mapped[int | None] = mapped_column(nullable=True)
+    maturity_rating: Mapped[str] = mapped_column(sa.String(20), default="")
     view_count: Mapped[int] = mapped_column(default=0)
     published_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
 
     genres: Mapped[list["Genre"]] = relationship(secondary=series_genres, lazy="selectin")
     episodes: Mapped[list["Episode"]] = relationship(
         back_populates="series", order_by="Episode.episode_number", lazy="selectin")
+    credits: Mapped[list["Credit"]] = relationship(
+        back_populates="series", order_by="Credit.display_order", lazy="selectin")
+    stills: Mapped[list["Still"]] = relationship(
+        back_populates="series", order_by="Still.display_order", lazy="selectin")
 
 
 class Episode(Base):
@@ -78,6 +86,28 @@ class Episode(Base):
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
 
     series: Mapped["Series"] = relationship(back_populates="episodes")
+
+
+class Credit(Base):
+    __tablename__ = "credits"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    series_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("series.id"), index=True)
+    person_name: Mapped[str] = mapped_column(sa.String(120))
+    role: Mapped[str] = mapped_column(sa.String(30), default="cast")  # director|cast|writer|producer
+    character_name: Mapped[str] = mapped_column(sa.String(120), default="")
+    display_order: Mapped[int] = mapped_column(default=0)
+
+    series: Mapped["Series"] = relationship(back_populates="credits")
+
+
+class Still(Base):
+    __tablename__ = "stills"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    series_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("series.id"), index=True)
+    image_url: Mapped[str] = mapped_column(sa.String(500))
+    display_order: Mapped[int] = mapped_column(default=0)
+
+    series: Mapped["Series"] = relationship(back_populates="stills")
 
 
 class Plan(Base):

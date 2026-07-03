@@ -1,7 +1,9 @@
 import subprocess
 from pathlib import Path
 
-RENDITIONS = [(1920, 4000), (1280, 2000), (854, 1000)]  # (long-side px, video kbps)
+PORTRAIT_RENDITIONS = [(1920, 4000), (1280, 2000), (854, 1000)]  # (height px, video kbps)
+LANDSCAPE_RENDITIONS = [(1080, 4500), (720, 2500), (480, 1000)]
+RENDITIONS = PORTRAIT_RENDITIONS  # back-compat alias
 
 
 def probe_duration(src: Path) -> float:
@@ -12,9 +14,22 @@ def probe_duration(src: Path) -> float:
     return float(out)
 
 
-def transcode_to_hls(src: Path, outdir: Path) -> int:
+def write_master_playlist(outdir: Path, renditions: list[tuple[int, int]],
+                          orientation: str) -> None:
+    aspect = 16 / 9 if orientation == "landscape" else 9 / 16
+    lines = ["#EXTM3U", "#EXT-X-VERSION:3"]
+    # lowest rendition first: players start on it instantly, then adapt up
+    for height, kbps in sorted(renditions, key=lambda r: r[1]):
+        width = int(height * aspect / 2) * 2
+        lines.append(f"#EXT-X-STREAM-INF:BANDWIDTH={kbps * 1100},RESOLUTION={width}x{height}")
+        lines.append(f"{height}.m3u8")
+    (outdir / "master.m3u8").write_text("\n".join(lines) + "\n")
+
+
+def transcode_to_hls(src: Path, outdir: Path, orientation: str = "portrait") -> int:
+    renditions = LANDSCAPE_RENDITIONS if orientation == "landscape" else PORTRAIT_RENDITIONS
     outdir.mkdir(parents=True, exist_ok=True)
-    for height, kbps in RENDITIONS:
+    for height, kbps in renditions:
         subprocess.run(
             ["ffmpeg", "-y", "-i", str(src),
              "-vf", f"scale=-2:{height}",
@@ -25,13 +40,7 @@ def transcode_to_hls(src: Path, outdir: Path) -> int:
              "-hls_segment_filename", str(outdir / f"{height}_%04d.ts"),
              str(outdir / f"{height}.m3u8")],
             check=True, capture_output=True)
-    lines = ["#EXTM3U", "#EXT-X-VERSION:3"]
-    # lowest rendition first: players start on it instantly, then adapt up
-    for height, kbps in sorted(RENDITIONS, key=lambda r: r[1]):
-        width = int(height * 9 / 16 / 2) * 2
-        lines.append(f"#EXT-X-STREAM-INF:BANDWIDTH={kbps * 1100},RESOLUTION={width}x{height}")
-        lines.append(f"{height}.m3u8")
-    (outdir / "master.m3u8").write_text("\n".join(lines) + "\n")
+    write_master_playlist(outdir, renditions, orientation)
     return round(probe_duration(src))
 
 
@@ -55,8 +64,12 @@ def make_progressive_mp4(src: Path, out: Path, max_mb: int = 90) -> int:
     return round(duration)
 
 
-def extract_thumbnail(src: Path, out_jpg: Path) -> None:
+def extract_frame(src: Path, out_jpg: Path, at_seconds: float = 1.0, height: int = 854) -> None:
     subprocess.run(
-        ["ffmpeg", "-y", "-ss", "1", "-i", str(src), "-frames:v", "1",
-         "-vf", "scale=-2:854", str(out_jpg)],
+        ["ffmpeg", "-y", "-ss", str(at_seconds), "-i", str(src), "-frames:v", "1",
+         "-vf", f"scale=-2:{height}", str(out_jpg)],
         check=True, capture_output=True)
+
+
+def extract_thumbnail(src: Path, out_jpg: Path) -> None:
+    extract_frame(src, out_jpg)
