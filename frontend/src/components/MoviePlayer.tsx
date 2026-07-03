@@ -15,6 +15,11 @@ function fmt(t: number): string {
   return h > 0 ? `${h}:${m.toString().padStart(2, "0")}:${s}` : `${m}:${s}`;
 }
 
+/**
+ * Docked player: a 16:9 video block that sits at the top of the portrait
+ * watch page (info scrolls beneath it). The maximize button fullscreens the
+ * block and locks the device to landscape where supported.
+ */
 export default function MoviePlayer({ movie, episode }: {
   movie: MovieDetail; episode: MovieEpisode;
 }) {
@@ -122,7 +127,7 @@ export default function MoviePlayer({ movie, episode }: {
     if (shell.requestFullscreen) {
       await shell.requestFullscreen().catch(() => {});
       try {
-        // best-effort — unsupported on iOS Safari and most desktops
+        // rotate to landscape — unsupported on iOS Safari and most desktops
         await (screen.orientation as unknown as {
           lock?: (o: string) => Promise<void>;
         }).lock?.("landscape");
@@ -155,7 +160,7 @@ export default function MoviePlayer({ movie, episode }: {
 
   if (episode.locked || state === "locked") {
     return (
-      <div className="fixed inset-0 z-50 bg-black">
+      <div className="sticky top-0 z-30 aspect-video w-full bg-black">
         <Paywall seriesSlug={movie.slug} poster={movie.banner_url}
                  message="This film is for subscribers. Subscribe to start watching."
                  detailPath={`/movies/${movie.slug}`} />
@@ -163,30 +168,22 @@ export default function MoviePlayer({ movie, episode }: {
     );
   }
 
-  // YouTube-sourced film: the embed brings its own controls
+  // YouTube-sourced film: the embed brings its own controls (incl. fullscreen)
   if (youtubeId) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col bg-black">
-        <div className="flex items-center gap-3 p-4">
-          <Link href={`/movies/${movie.slug}`} aria-label="Back"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-zinc-900 text-lg">
-            ←
-          </Link>
-          <p className="line-clamp-1 text-sm font-bold">{movie.title}</p>
-        </div>
-        <div className="flex flex-1 items-center justify-center">
-          <iframe
-            src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&playsinline=1`}
-            title={movie.title} allow="autoplay; encrypted-media; fullscreen"
-            allowFullScreen className="aspect-video w-full" />
-        </div>
+      <div className="sticky top-0 z-30 aspect-video w-full bg-black">
+        <iframe
+          src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&playsinline=1`}
+          title={movie.title} allow="autoplay; encrypted-media; fullscreen"
+          allowFullScreen className="h-full w-full" />
       </div>
     );
   }
 
   return (
     <div ref={shellRef} onClick={poke}
-         className="fixed inset-0 z-50 flex items-center justify-center bg-black">
+         className={`sticky top-0 z-30 w-full bg-black ${
+           fullscreen ? "flex h-full items-center justify-center" : "aspect-video"}`}>
       <video ref={videoRef} playsInline
              poster={episode.thumbnail_url || movie.banner_url}
              onClick={(e) => { e.stopPropagation(); togglePlay(); }}
@@ -200,8 +197,9 @@ export default function MoviePlayer({ movie, episode }: {
              onEnded={() => {
                saveProgress(videoRef.current?.duration ?? duration, true);
                setControlsVisible(true);
+               if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
              }}
-             className="max-h-full w-full object-contain" />
+             className="h-full w-full object-contain" />
 
       {state === "loading" && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -217,29 +215,31 @@ export default function MoviePlayer({ movie, episode }: {
 
       <div className={`absolute inset-0 flex flex-col justify-between bg-gradient-to-b from-black/70 via-transparent to-black/80 transition-opacity duration-200 ${
         controlsVisible ? "opacity-100" : "pointer-events-none opacity-0"}`}>
-        <div className="flex items-center gap-3 p-4">
+        <div className="flex items-center gap-2 p-3">
           <Link href={`/movies/${movie.slug}`} aria-label="Back"
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-lg">
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-base">
             ←
           </Link>
-          <p className="line-clamp-1 text-sm font-bold drop-shadow">{movie.title}</p>
+          {fullscreen && (
+            <p className="line-clamp-1 text-sm font-bold drop-shadow">{movie.title}</p>
+          )}
         </div>
 
-        <div className="flex items-center justify-center gap-10">
+        <div className="flex items-center justify-center gap-8">
           <button onClick={(e) => { e.stopPropagation(); skip(-10); }}
                   aria-label="Back 10 seconds"
-                  className="text-sm font-semibold text-zinc-200">⟲ 10</button>
+                  className="text-xs font-semibold text-zinc-200">⟲ 10</button>
           <button onClick={(e) => { e.stopPropagation(); togglePlay(); }}
                   aria-label={paused ? "Play" : "Pause"}
-                  className="flex h-14 w-14 items-center justify-center rounded-full bg-black/50 text-2xl backdrop-blur-sm">
+                  className="flex h-12 w-12 items-center justify-center rounded-full bg-black/50 text-xl backdrop-blur-sm">
             {paused ? "▶" : "⏸"}
           </button>
           <button onClick={(e) => { e.stopPropagation(); skip(10); }}
                   aria-label="Forward 10 seconds"
-                  className="text-sm font-semibold text-zinc-200">10 ⟳</button>
+                  className="text-xs font-semibold text-zinc-200">10 ⟳</button>
         </div>
 
-        <div className="px-4 pb-5">
+        <div className="px-3 pb-2.5">
           <div className="mb-1 h-0.5 w-full overflow-hidden rounded bg-zinc-800">
             <div className="h-full bg-zinc-500/70"
                  style={{ width: `${duration ? Math.min(100, (buffered / duration) * 100) : 0}%` }} />
@@ -248,13 +248,14 @@ export default function MoviePlayer({ movie, episode }: {
                  value={Math.min(time, duration)} onChange={onSeek} aria-label="Seek"
                  onClick={(e) => e.stopPropagation()}
                  className="w-full accent-rose-600" />
-          <div className="mt-1 flex items-center justify-between text-xs text-zinc-300">
+          <div className="flex items-center justify-between text-xs text-zinc-300">
             <span>{fmt(time)} / {fmt(duration)}</span>
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-4">
               <button onClick={(e) => { e.stopPropagation(); toggleMute(); }}
                       aria-label={muted ? "Unmute" : "Mute"}>{muted ? "🔇" : "🔊"}</button>
               <button onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
-                      aria-label="Fullscreen" className="text-base">{fullscreen ? "⤡" : "⛶"}</button>
+                      aria-label={fullscreen ? "Exit fullscreen" : "Fullscreen"}
+                      className="text-base">{fullscreen ? "⤡" : "⛶"}</button>
             </div>
           </div>
         </div>
