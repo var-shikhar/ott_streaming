@@ -13,7 +13,7 @@ export default async function MoviesHomePage() {
   }
   return (
     <div className="animate-fade-in pb-4">
-      <MovieHero items={data.featured} />
+      <MovieHero items={data.featured.length ? data.featured : data.trending.slice(0, 5)} />
       {data.continue_watching.length > 0 && (
         <section className="mt-6">
           <h2 className="mb-2 px-4 text-base font-bold">Continue Watching</h2>
