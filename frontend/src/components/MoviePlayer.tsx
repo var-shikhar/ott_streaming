@@ -50,7 +50,10 @@ export default function MoviePlayer({ movie, episode }: {
   const poke = useCallback(() => {
     setControlsVisible(true);
     if (hideTimer.current) clearTimeout(hideTimer.current);
-    hideTimer.current = setTimeout(() => setControlsVisible(false), 3000);
+    // only auto-hide while playing; a paused player keeps its controls
+    if (videoRef.current && !videoRef.current.paused) {
+      hideTimer.current = setTimeout(() => setControlsVisible(false), 3000);
+    }
   }, []);
 
   useEffect(() => {
@@ -197,6 +200,12 @@ export default function MoviePlayer({ movie, episode }: {
 
   return (
     <div ref={shellRef} onClick={poke}
+         onPointerMove={(e) => { if (e.pointerType === "mouse") poke(); }}
+         onPointerLeave={(e) => {
+           if (e.pointerType === "mouse" && videoRef.current && !videoRef.current.paused) {
+             setControlsVisible(false);
+           }
+         }}
          className={`sticky top-0 z-30 w-full overflow-hidden bg-black ${
            fullscreen ? "h-full" : "aspect-video"}`}>
      <div className={rotated ? "absolute left-1/2 top-1/2" : "relative h-full w-full"}
@@ -206,14 +215,20 @@ export default function MoviePlayer({ movie, episode }: {
             : undefined}>
       <video ref={videoRef} playsInline
              poster={episode.thumbnail_url || movie.banner_url}
-             onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+             onClick={(e) => {
+               e.stopPropagation();
+               // touch: first tap only reveals controls; play/pause needs a
+               // second tap (desktop hover has already revealed them)
+               if (controlsVisible) togglePlay();
+               else poke();
+             }}
              onTimeUpdate={onTimeUpdate}
              onLoadedMetadata={() => {
                const d = videoRef.current?.duration;
                if (d && Number.isFinite(d)) setDuration(d);
              }}
-             onPlay={() => setPaused(false)}
-             onPause={() => setPaused(true)}
+             onPlay={() => { setPaused(false); poke(); }}
+             onPause={() => { setPaused(true); poke(); }}
              onEnded={() => {
                saveProgress(videoRef.current?.duration ?? duration, true);
                setControlsVisible(true);
@@ -233,10 +248,12 @@ export default function MoviePlayer({ movie, episode }: {
         </div>
       )}
 
-      <div className={`absolute inset-0 flex flex-col justify-between bg-gradient-to-b from-black/70 via-transparent to-black/80 transition-opacity duration-200 ${
+      <div onClick={(e) => { e.stopPropagation(); togglePlay(); }}
+           className={`absolute inset-0 flex flex-col justify-between bg-gradient-to-b from-black/70 via-transparent to-black/80 transition-opacity duration-200 ${
         controlsVisible ? "opacity-100" : "pointer-events-none opacity-0"}`}>
         <div className="flex items-center gap-2 p-3">
           <Link href={`/movies/${movie.slug}`} aria-label="Back"
+                onClick={(e) => e.stopPropagation()}
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-base">
             ←
           </Link>
