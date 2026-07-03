@@ -9,7 +9,9 @@ app = FastAPI(title="ShortReel API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_origin],
+    # FRONTEND_ORIGIN accepts a comma-separated list, e.g.
+    # "http://localhost:3000,http://localhost:3001"
+    allow_origins=[o.strip() for o in settings.frontend_origin.split(",") if o.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
