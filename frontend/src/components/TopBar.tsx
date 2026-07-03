@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api-client";
+import { setLoggedIn } from "@/lib/session";
 import type { User } from "@/lib/types";
 
 export default function TopBar() {
@@ -15,14 +16,15 @@ export default function TopBar() {
 
   useEffect(() => {
     apiFetch<User>("/api/v1/auth/me")
-      .then(setUser)
-      .catch(() => setUser(null))
+      .then((u) => { setUser(u); setLoggedIn(true); })
+      .catch(() => { setUser(null); setLoggedIn(false); })
       .finally(() => setLoaded(true));
   }, []);
 
   async function logout() {
     await apiFetch("/api/v1/auth/logout", { method: "POST" }).catch(() => {});
     setUser(null);
+    setLoggedIn(false);
     router.push("/");
     router.refresh();
   }

@@ -6,6 +6,7 @@ import ActionRail from "@/components/ActionRail";
 import CommentsSheet from "@/components/CommentsSheet";
 import Paywall from "@/components/Paywall";
 import { apiFetch, ApiError } from "@/lib/api-client";
+import { isLoggedIn } from "@/lib/session";
 import type { EpisodeSummary, PlaybackInfo, SeriesDetail } from "@/lib/types";
 
 export default function EpisodeSlide({ episode, series, active, muted, onToggleMute, onEnded }: {
@@ -27,10 +28,11 @@ export default function EpisodeSlide({ episode, series, active, muted, onToggleM
   const [commentsOpen, setCommentsOpen] = useState(false);
 
   const saveProgress = useCallback((position: number, completed: boolean) => {
+    if (isLoggedIn() === false) return; // guests: don't fire doomed requests
     apiFetch(`/api/v1/progress/${episode.id}`, {
       method: "PUT",
       body: JSON.stringify({ position_seconds: Math.floor(position), completed }),
-    }).catch(() => {}); // guests get a 401 — progress just isn't saved
+    }).catch(() => {});
   }, [episode.id]);
 
   // load the stream only when the slide is actually active — neighbors just
