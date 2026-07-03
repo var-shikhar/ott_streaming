@@ -24,7 +24,9 @@ export interface CurrentSubscription {
   status: string; plan: Plan; current_period_end: string | null;
 }
 export interface PlaybackInfo {
-  url: string; episode_id: string; episode_number: number;
+  type: "hls" | "mp4" | "youtube";
+  url: string; youtube_id?: string;
+  episode_id: string; episode_number: number;
   series_slug: string; resume_position: number;
 }
 export interface CommentOut {

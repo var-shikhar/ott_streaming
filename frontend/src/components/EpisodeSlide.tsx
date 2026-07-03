@@ -21,6 +21,7 @@ export default function EpisodeSlide({ episode, series, active, muted, onToggleM
   const loadedRef = useRef(false);
   const lastSaved = useRef(0);
   const [state, setState] = useState<"idle" | "loading" | "ready" | "locked" | "error">("idle");
+  const [youtubeId, setYoutubeId] = useState("");
   const [paused, setPaused] = useState(false);
   const [autoMuted, setAutoMuted] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -45,9 +46,16 @@ export default function EpisodeSlide({ episode, series, active, muted, onToggleM
     apiFetch<PlaybackInfo>(`/api/v1/episodes/${episode.id}/playback`)
       .then((playback) => {
         if (cancelled) return;
+        if (playback.type === "youtube" && playback.youtube_id) {
+          setYoutubeId(playback.youtube_id);
+          setState("ready");
+          return;
+        }
         const video = videoRef.current;
         if (!video) return;
-        if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        if (playback.type === "mp4") {
+          video.src = playback.url;
+        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
           video.src = playback.url;
         } else if (Hls.isSupported()) {
           const hls = new Hls({
@@ -83,6 +91,7 @@ export default function EpisodeSlide({ episode, series, active, muted, onToggleM
 
   // play/pause with visibility; handle autoplay-with-sound rejection
   useEffect(() => {
+    if (youtubeId) return; // YouTube iframe mounts/unmounts with `active` instead
     const video = videoRef.current;
     if (!video || state !== "ready") return;
     if (active) {
@@ -133,6 +142,36 @@ export default function EpisodeSlide({ episode, series, active, muted, onToggleM
 
   if (episode.locked || state === "locked") {
     return <Paywall seriesSlug={series.slug} poster={series.poster_url} />;
+  }
+
+  if (youtubeId) {
+    return (
+      <div className="relative h-full w-full bg-black">
+        {active ? (
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&playsinline=1&rel=0`}
+            title={episode.title}
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowFullScreen
+            className="h-full w-full"
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={episode.thumbnail_url || series.poster_url} alt={episode.title}
+               className="h-full w-full object-contain" />
+        )}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/80 via-black/30 to-transparent px-4 pb-5 pt-16">
+          <p className="text-sm font-bold drop-shadow">{series.title}</p>
+          <p className="mt-0.5 text-xs text-zinc-300 drop-shadow">
+            Ep {episode.episode_number} · {episode.title}
+          </p>
+        </div>
+        <ActionRail episode={episode} seriesTitle={series.title}
+                    onOpenComments={() => setCommentsOpen(true)} />
+        <CommentsSheet episodeId={episode.id} open={commentsOpen}
+                       onClose={() => setCommentsOpen(false)} />
+      </div>
+    );
   }
 
   return (
