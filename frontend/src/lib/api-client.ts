@@ -1,4 +1,4 @@
-import { isLoggedIn } from "@/lib/session";
+import { isLoggedIn, setLoggedIn } from "@/lib/session";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -18,10 +18,12 @@ function doFetch(path: string, init?: RequestInit) {
 
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   let res = await doFetch(path, init);
-  // 401 → try a silent token refresh, but only when a session ever existed —
-  // guests would just generate a second doomed request.
+  // 401 → one silent token refresh. Its outcome doubles as session detection:
+  // success = logged-in user with an expired access token (retry the call),
+  // failure = guest (remember it so no further refreshes are attempted).
   if (res.status === 401 && !path.startsWith("/api/v1/auth/") && isLoggedIn() !== false) {
     const refreshed = await doFetch("/api/v1/auth/refresh", { method: "POST" });
+    setLoggedIn(refreshed.ok);
     if (refreshed.ok) res = await doFetch(path, init);
   }
   if (!res.ok) {
