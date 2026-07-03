@@ -31,6 +31,7 @@ export default function MoviePlayer({ movie, episode }: {
   const [paused, setPaused] = useState(true);
   const [muted, setMuted] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
+  const [rotated, setRotated] = useState(false); // CSS landscape fallback when orientation.lock is unsupported
   const [time, setTime] = useState(0);
   const [buffered, setBuffered] = useState(0);
   const [duration, setDuration] = useState(episode.duration_seconds);
@@ -66,10 +67,22 @@ export default function MoviePlayer({ movie, episode }: {
     });
   }, [state, youtubeId]);
 
+  // fullscreen must always read landscape: if the viewport is still portrait
+  // once fullscreen (orientation.lock unsupported/refused), rotate the player
+  // 90° with CSS; a real device rotation makes the viewport landscape and
+  // removes the fake rotation automatically.
   useEffect(() => {
-    const onChange = () => setFullscreen(Boolean(document.fullscreenElement));
-    document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
+    const update = () => {
+      const fs = Boolean(document.fullscreenElement);
+      setFullscreen(fs);
+      setRotated(fs && window.innerHeight > window.innerWidth);
+    };
+    document.addEventListener("fullscreenchange", update);
+    window.addEventListener("resize", update);
+    return () => {
+      document.removeEventListener("fullscreenchange", update);
+      window.removeEventListener("resize", update);
+    };
   }, []);
 
   // flush progress when the tab is hidden or the player unmounts
@@ -182,8 +195,13 @@ export default function MoviePlayer({ movie, episode }: {
 
   return (
     <div ref={shellRef} onClick={poke}
-         className={`sticky top-0 z-30 w-full bg-black ${
-           fullscreen ? "flex h-full items-center justify-center" : "aspect-video"}`}>
+         className={`sticky top-0 z-30 w-full overflow-hidden bg-black ${
+           fullscreen ? "h-full" : "aspect-video"}`}>
+     <div className={rotated ? "absolute left-1/2 top-1/2" : "relative h-full w-full"}
+          style={rotated
+            ? { width: "100dvh", height: "100dvw",
+                transform: "translate(-50%, -50%) rotate(90deg)" }
+            : undefined}>
       <video ref={videoRef} playsInline
              poster={episode.thumbnail_url || movie.banner_url}
              onClick={(e) => { e.stopPropagation(); togglePlay(); }}
@@ -260,6 +278,7 @@ export default function MoviePlayer({ movie, episode }: {
           </div>
         </div>
       </div>
+     </div>
     </div>
   );
 }
