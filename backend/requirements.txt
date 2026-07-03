@@ -11,5 +11,6 @@ PyJWT>=2.9
 razorpay>=1.4
 boto3>=1.34
 cryptography>=43
+imagekitio>=4.0
 httpx>=0.27
 pytest>=8.2

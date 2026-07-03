@@ -35,6 +35,26 @@ def transcode_to_hls(src: Path, outdir: Path) -> int:
     return round(probe_duration(src))
 
 
+def make_progressive_mp4(src: Path, out: Path, max_mb: int = 90) -> int:
+    """Single H.264 MP4 (faststart) sized to fit under max_mb — used by the
+    ImageKit demo storage mode instead of an HLS ladder."""
+    out.parent.mkdir(parents=True, exist_ok=True)
+    duration = probe_duration(src)
+    # bitrate that fits the size budget, capped at 1800k, floored at 400k
+    budget_kbps = int(max_mb * 8 * 1000 / max(duration, 1) * 0.9) - 128  # audio reserve
+    v_kbps = max(400, min(1800, budget_kbps))
+    subprocess.run(
+        ["ffmpeg", "-y", "-i", str(src),
+         "-vf", "scale='if(gt(a,1),1280,-2)':'if(gt(a,1),-2,1280)'",
+         "-c:v", "libx264", "-preset", "veryfast",
+         "-b:v", f"{v_kbps}k", "-maxrate", f"{int(v_kbps * 1.3)}k", "-bufsize", f"{v_kbps * 2}k",
+         "-c:a", "aac", "-b:a", "128k", "-ac", "2",
+         "-movflags", "+faststart",
+         str(out)],
+        check=True, capture_output=True)
+    return round(duration)
+
+
 def extract_thumbnail(src: Path, out_jpg: Path) -> None:
     subprocess.run(
         ["ffmpeg", "-y", "-ss", "1", "-i", str(src), "-frames:v", "1",

@@ -10,3 +10,4 @@ node_modules/
 frontend/.next/
 frontend/.env.local
 .DS_Store
+data/

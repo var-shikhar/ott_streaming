@@ -72,6 +72,7 @@ class Episode(Base):
     title: Mapped[str] = mapped_column(sa.String(255), default="")
     duration_seconds: Mapped[int] = mapped_column(default=0)
     hls_path: Mapped[str] = mapped_column(sa.String(500), default="")
+    youtube_id: Mapped[str] = mapped_column(sa.String(20), default="")  # set => YouTube-embed source
     thumbnail_url: Mapped[str] = mapped_column(sa.String(500), default="")
     status: Mapped[str] = mapped_column(sa.String(20), default="processing")  # processing|ready|failed
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)

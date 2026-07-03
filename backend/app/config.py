@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     frontend_origin: str = "http://localhost:3000"
     api_base_url: str = "http://localhost:8000"
 
-    storage_mode: str = "local"  # "local" | "s3"
+    storage_mode: str = "local"  # "local" | "s3" | "imagekit" (demo: progressive MP4 on ImageKit CDN)
     media_root: str = "media"
     aws_region: str = "ap-south-1"
     s3_bucket: str = ""

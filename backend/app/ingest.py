@@ -13,7 +13,20 @@ from app import models
 from app.config import settings
 from app.db import SessionLocal
 from app.storage import get_storage
-from app.transcode import extract_thumbnail, transcode_to_hls
+from app.transcode import extract_thumbnail, make_progressive_mp4, transcode_to_hls
+
+
+def _imagekit_client():
+    from imagekitio import ImageKit  # optional dep: pip install imagekitio
+    return ImageKit(private_key=settings.imagekit_private_key,
+                    public_key=settings.imagekit_public_key,
+                    url_endpoint=settings.imagekit_url_endpoint)
+
+
+def upload_video_imagekit(episode_id: str, mp4: Path) -> str:
+    with open(mp4, "rb") as f:
+        result = _imagekit_client().upload_file(file=f, file_name=f"{episode_id}.mp4")
+    return result.url
 
 
 def get_or_create_series(db, args) -> models.Series:
@@ -40,12 +53,8 @@ def get_or_create_series(db, args) -> models.Series:
 
 def upload_thumbnail(episode_id: str, jpg: Path) -> str:
     if settings.imagekit_private_key:
-        from imagekitio import ImageKit  # optional dep: pip install imagekitio
-        ik = ImageKit(private_key=settings.imagekit_private_key,
-                      public_key=settings.imagekit_public_key,
-                      url_endpoint=settings.imagekit_url_endpoint)
         with open(jpg, "rb") as f:
-            result = ik.upload_file(file=f, file_name=f"{episode_id}.jpg")
+            result = _imagekit_client().upload_file(file=f, file_name=f"{episode_id}.jpg")
         return result.url
     # No ImageKit configured: keep a local copy for dev, but store a URL that
     # works from ANY device — a machine-local /media URL breaks the moment the
@@ -76,9 +85,14 @@ def ingest(args) -> None:
         try:
             with tempfile.TemporaryDirectory() as tmp:
                 tmpdir = Path(tmp)
-                hls_dir = tmpdir / "hls"
-                episode.duration_seconds = transcode_to_hls(src, hls_dir)
-                episode.hls_path = get_storage().publish(str(episode.id), hls_dir)
+                if settings.storage_mode == "imagekit":
+                    mp4 = tmpdir / "video.mp4"
+                    episode.duration_seconds = make_progressive_mp4(src, mp4)
+                    episode.hls_path = upload_video_imagekit(str(episode.id), mp4)
+                else:
+                    hls_dir = tmpdir / "hls"
+                    episode.duration_seconds = transcode_to_hls(src, hls_dir)
+                    episode.hls_path = get_storage().publish(str(episode.id), hls_dir)
                 thumb = tmpdir / "thumb.jpg"
                 extract_thumbnail(src, thumb)
                 episode.thumbnail_url = upload_thumbnail(str(episode.id), thumb)
